@@ -22,6 +22,9 @@ app.use(session({
 }));
 
 //init db
+require('./dbs/init.mongoose');
+const {checkOverLoad} = require('./helper/check.connect');
+checkOverLoad();
 
 //init routes
 app.get('/', (req, res, next) => {
