@@ -25,13 +25,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //init db
 require('./dbs/init.mongoose');
-const {checkOverLoad} = require('./helper/check.connect');
-checkOverLoad();
+// const {checkOverLoad} = require('./helper/check.connect');
+// checkOverLoad();
 
 //init routes
 app.use('/', require('./routes/index'));
 
 //handling error
+app.use((req, res, next) => {
+    const error = new Error('Not found');
+    error.status = 404;
+    next(error);
+});
+
+app.use((error, req, res, next) => {
+    const statusCode = error.status || 500;
+    
+    return res.status(statusCode).json({
+        status: 'error',
+        code: statusCode,
+        message: error.message || 'Internal server error'
+    });
+});
 
 module.exports = app;
 

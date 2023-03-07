@@ -5,60 +5,52 @@ const HEADER = {
     AUTHORIZATION: 'authorization'
 }
 
+const { BadRequestError } = require('../core/error.response');
 const { findByID } = require('../services/apikey.service');
 
 const checkApiKey = async (req, res, next) => {
-    try {
-        const key = req.headers[HEADER.API_KEY]?.toString();
+    const key = req.headers[HEADER.API_KEY]?.toString();
 
-        if (!key) {
-            return res.status(403).json({
-                message: 'Forbidden error'
-            });
-        }
-
-        //check obj key
-        const objKey = await findByID(key);
-
-        if (!objKey) {
-            return res.status(403).json({
-                message: 'Forbidden error'
-            });
-        }
-
-        req.objKey = objKey;
-
-        return next();
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            message: 'Internal server error'
-        });
+    if (!key) {
+        throw new BadRequestError('API key is required')
     }
+
+    //check obj key
+    const objKey = await findByID(key);
+
+    if (!objKey) {
+        throw new BadRequestError('API key is invalid')
+    }
+
+    req.objKey = objKey;
+
+    return next();
 };
 
 const checkPermission = (permission) => {
     return (req, res, next) => {
         if (!req.objKey.permissions) {
-            return res.status(403).json({
-                message: 'Permission Denied'
-            });
+            throw new BadRequestError('Permission denied');
         }
         
-        console.log('Permissions::', req.objKey.permissions);
         const validPermission = req.objKey.permissions.includes(permission);
 
         if (!validPermission) {
-            return res.status(403).json({
-                message: 'Permission Denied'
-            });
+            throw new BadRequestError('Permission denied');
         }
 
         return next();
     };
 };
 
+const asyncHandler = (fn) => {
+    return (req, res, next) => {
+        fn(req, res, next).catch(next);
+    };
+};
+
 module.exports = {
     checkApiKey,
-    checkPermission
+    checkPermission, 
+    asyncHandler
 };
