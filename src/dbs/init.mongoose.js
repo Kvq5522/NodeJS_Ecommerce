@@ -1,7 +1,7 @@
 "use strict";
-const myEnvironment = require("../config/environment");
 const mongoose = require("mongoose");
 const { countConnect } = require("../helper/check.connect");
+const config = require("../config/config.mongodb");
 
 class Database {
   constructor() {
@@ -9,13 +9,13 @@ class Database {
   }
 
   connect(type = "mongodb") {
-    if (myEnvironment.status === "dev") {
+    if (process.NODE_ENV === "dev") {
       mongoose.set("debug", true);
       mongoose.set("debug", { color: true });
     }
 
     mongoose
-      .connect(myEnvironment.connectionString)
+      .connect(`${type}://${config.db.host}:${config.db.port}/${config.db.name}`)
       .then(() => {
         console.log("Connected to MongoDB");
         countConnect();
