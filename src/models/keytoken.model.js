@@ -6,7 +6,7 @@ const DOCUMENT_NAME = 'KeyToken';
 const COLLECTION_NAME = 'keytokens';
 
 const keyTokenSchema = new Schema({
-    name: {
+    user: {
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'Shop'
@@ -19,9 +19,13 @@ const keyTokenSchema = new Schema({
         type: String,
         required: true
     },
-    refreshToken: {
+    refreshTokensUsed: {
         type: Array,
         default: []
+    },
+    refreshToken: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true,

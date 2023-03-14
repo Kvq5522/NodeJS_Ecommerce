@@ -1,16 +1,6 @@
 'use strict'
 
-const StatusCode = {
-    FORBIDDEN: 403,
-    CONFLICT: 409,
-    SERVER: 500
-};
-
-const StatusMessage = {
-    FORBIDDEN: 'Bad request',
-    CONFLICT: 'Conflict error',
-    SERVER: 'Internal server error'
-}
+const { StatusCodes, ReasonPhrases } = require('../utils/httpStatusCode');
 
 class ErrorResponse extends Error {
     constructor(message, statusCode) {
@@ -20,19 +10,25 @@ class ErrorResponse extends Error {
 }
 
 class ConflictRequestError extends ErrorResponse {
-    constructor(message = StatusMessage.CONFLICT, statusCode = StatusCode.CONFLICT) {
+    constructor(message = ReasonPhrases.CONFLICT, statusCode = StatusCodes.CONFLICT) {
         super(message, statusCode);
     }
 }
 
 class BadRequestError extends ErrorResponse {
-    constructor(message = StatusMessage.FORBIDDEN, statusCode = StatusCode.FORBIDDEN) {
+    constructor(message = ReasonPhrases.FORBIDDEN, statusCode = StatusCodes.FORBIDDEN) {
         super(message, statusCode);
     }
 }
 
 class InternalServerError extends ErrorResponse {
-    constructor(message = StatusMessage.SERVER, statusCode = StatusCode.SERVER) {
+    constructor(message = ReasonPhrases.SERVER, statusCode = StatusCodes.SERVER) {
+        super(message, statusCode);
+    }
+}
+
+class AuthFailureError extends ErrorResponse {
+    constructor(message = ReasonPhrases.UNAUTHORIZED, statusCode = StatusCodes.UNAUTHORIZED) {
         super(message, statusCode);
     }
 }
@@ -41,5 +37,6 @@ class InternalServerError extends ErrorResponse {
 module.exports = {
     ConflictRequestError,
     BadRequestError,
-    InternalServerError
+    InternalServerError,
+    AuthFailureError
 }

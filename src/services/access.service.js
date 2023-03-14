@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const keyTokenService = require('../services/keyToken.service');
 const { createTokenPair  } = require('../auth/authUtils');
 const { getInfoData } = require('../utils/index');
-const { BadRequestError, ConflictRequestError } = require('../core/error.response');
+const { BadRequestError, ConflictRequestError, AuthFailureError } = require('../core/error.response');
+const { findByEmail } = require('./shop.service');
 
 const roleShop = {
     SHOP: 'SHOP',
@@ -16,7 +17,7 @@ const roleShop = {
 };
 
 class AccessService {
-    static signUp = async (name, email, password) => {
+    static signUp = async ({name, email, password}) => {
         const shopHolder = await shopModel.findOne({ email }).lean();
         
         if (shopHolder) {
@@ -55,25 +56,42 @@ class AccessService {
             //     }
             // }
 
-            const keyStore = await keyTokenService.createKeyToken(newShop._id, publicKey, privateKey);
+            const keyStore = await keyTokenService.createKeyToken({userId: newShop._id, publicKey, privateKey});
 
             if (!keyStore) {
                 throw new ConflictRequestError('Error creating key token');
             }
 
-            const tokens = await createTokenPair({ id: newShop._id, email }, 
+            const tokens = await createTokenPair({ userId: newShop._id, email }, 
                 publicKey, privateKey);
 
             return {
-                code: '201',
-                metadata: {
-                    shop: getInfoData({fields: ['_id', 'name', 'email'], object: newShop}),
-                    tokens
-                }
+                shop: getInfoData({fields: ['_id', 'name', 'email'], object: newShop}),
+                tokens
             }
         }
 
         throw new ConflictRequestError('Error creating shop');
+    }
+
+    static signIn = async ({email, password, refreshToken=null}) => {
+        const foundShop = await findByEmail({email});
+        if (!foundShop) throw new BadRequestError('Error: Email not registered');
+
+        const match = bcrypt.compare(password, foundShop.password);
+        if (!match) throw new AuthFailureError('Error: Authentication error');
+        
+        const publicKey = crypto.randomBytes(64).toString('hex');
+        const privateKey = crypto.randomBytes(64).toString('hex');
+        const tokens = await createTokenPair({ userId: foundShop._id, email },
+            publicKey, privateKey);
+
+        await keyTokenService.createKeyToken({ publicKey, privateKey, refreshToken: tokens.refreshToken, userId: foundShop._id});
+
+        return {
+            shop: getInfoData({fields: ['_id', 'name', 'email'], object: foundShop}),
+            tokens
+        }
     }
 }
 
