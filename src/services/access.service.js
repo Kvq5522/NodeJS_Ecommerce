@@ -8,6 +8,7 @@ const { createTokenPair  } = require('../auth/authUtils');
 const { getInfoData } = require('../utils/index');
 const { BadRequestError, ConflictRequestError, AuthFailureError } = require('../core/error.response');
 const { findByEmail } = require('./shop.service');
+const { removeById } = require('../services/keyToken.service');
 
 const roleShop = {
     SHOP: 'SHOP',
@@ -43,9 +44,6 @@ class AccessService {
             //     }
             // }); for large industries
 
-            const publicKey = crypto.randomBytes(64).toString('hex');
-            const privateKey = crypto.randomBytes(64).toString('hex');
-
             // const publicKeyString = await keyTokenService.createKeyToken(newShop._id, publicKey, privateKey);
             // const publicKeyObject = crypto.createPublicKey(publicKeyString); 
 
@@ -55,6 +53,9 @@ class AccessService {
             //         message: 'Error creating key token'
             //     }
             // }
+
+            const publicKey = crypto.randomBytes(64).toString('hex');
+            const privateKey = crypto.randomBytes(64).toString('hex');
 
             const keyStore = await keyTokenService.createKeyToken({userId: newShop._id, publicKey, privateKey});
 
@@ -92,6 +93,10 @@ class AccessService {
             shop: getInfoData({fields: ['_id', 'name', 'email'], object: foundShop}),
             tokens
         }
+    }
+
+    static signOut = async({keyStore}) => {
+        return await removeById(keyStore._id);
     }
 }
 
