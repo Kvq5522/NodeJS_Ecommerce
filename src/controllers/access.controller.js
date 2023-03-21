@@ -1,6 +1,6 @@
 'use strict';
 
-const { signUp, signIn, signOut } = require('../services/access.service');
+const { signUp, signIn, signOut, handlerRefreshToken } = require('../services/access.service');
 
 const { OK, CREATED, successResponse } = require('../core/success.response');
 
@@ -26,6 +26,20 @@ class AccessController {
         return new successResponse({
             message: 'User logged out successfully',
             metadata: await signOut({keyStore: req.keyStore})
+        }).send(res);
+    }
+
+    handleRefreshToken = async (req, res, next) => {
+        const refreshToken = req.refreshToken;
+        const user = req.user;
+        const keyStore = req.keyStore;
+        return new successResponse({
+            message: 'User refreshed token successfully',
+            metadata: await handlerRefreshToken({ 
+                refreshToken: refreshToken, 
+                user: user, 
+                keyStore: keyStore 
+            })
         }).send(res);
     }
 }

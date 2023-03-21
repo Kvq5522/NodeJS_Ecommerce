@@ -1,7 +1,7 @@
 'use strict';
 
 const router = require('express').Router();
-const { signUp, signIn, signOut } = require('../../controllers/access.controller');
+const { signUp, signIn, signOut, handleRefreshToken } = require('../../controllers/access.controller');
 const asyncHandler = require('../../helper/asyncHandler');
 const { authentication } = require('../../auth/authUtils');
 
@@ -16,5 +16,8 @@ router.use(authentication);
 
 // signOut
 router.post('/shop/sign-out', asyncHandler(signOut));
+
+//handleRefreshToken
+router.post('/shop/handle-refresh-token', asyncHandler(handleRefreshToken));
 
 module.exports = router;
